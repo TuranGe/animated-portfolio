@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^2.1.1",
+    "@sveltejs/adapter-vercel": "^6.3.3",
     "@sveltejs/kit": "^1.27.4",
     "@sveltejs/vite-plugin-svelte": "^2.5.3",
     "autoprefixer": "^10.4.16",
@@ -21,7 +22,7 @@
     "gsap": "^3.12.4"
   },
   "engines": {
-    "node": ">=20.0.0 <21.0.0"
+    "node": "20.x"
   },
   "type": "module"
 }
