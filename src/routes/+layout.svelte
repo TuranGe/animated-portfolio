@@ -1,36 +1,28 @@
 <script>
-  import '../app.css';
-  import Cursor from '$lib/Cursor.svelte';
-  import { onMount } from 'svelte';
-  import { page } from '$app/stores';
-
-  let isMobile = false;
+  import "../app.css";
+  import { onMount } from "svelte";
+  import { page } from "$app/stores";
 
   // Sub-pages that need normal scroll (not fullpage)
-  $: isSubPage = $page.url.pathname !== '/';
+  $: isSubPage = $page.url.pathname !== "/";
 
   onMount(() => {
-    isMobile = window.matchMedia('(pointer: coarse)').matches;
-    const saved = localStorage.getItem('kuon-theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', saved);
+    const saved = localStorage.getItem("kuon-theme") || "dark";
+    document.documentElement.setAttribute("data-theme", saved);
     window.onbeforeunload = null;
   });
 
-  $: if (typeof document !== 'undefined') {
+  $: if (typeof document !== "undefined") {
     if (isSubPage) {
-      document.body.style.overflow = 'auto';
-      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "auto";
     } else {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     }
   }
 </script>
 
 <svelte:head><title>Portfolio</title></svelte:head>
-
-{#if !isMobile}
-  <Cursor />
-{/if}
 
 <slot />

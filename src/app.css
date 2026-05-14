@@ -6,33 +6,38 @@
 
 /* ─── THEME VARIABLES ─── */
 :root {
-  --bg:       #111111;
-  --bg2:      #1a1a1a;
-  --fg:       #f0ede8;
-  --fg2:      #a0a0a0;
-  --accent:   #f97316;
-  --accent2:  #fb923c;
-  --border:   rgba(249,115,22,0.18);
-  --surface:  #1e1e1e;
-  --overlay:  rgba(17,17,17,0.92);
+  --bg: #111111;
+  --bg2: #1a1a1a;
+  --fg: #f0ede8;
+  --fg2: #a0a0a0;
+  --accent: #f97316;
+  --accent2: #fb923c;
+  --border: rgba(249, 115, 22, 0.18);
+  --surface: #1e1e1e;
+  --overlay: rgba(17, 17, 17, 0.92);
 }
 
 [data-theme="light"] {
-  --bg:       #f5f2ed;
-  --bg2:      #eae7e2;
-  --fg:       #111111;
-  --fg2:      #555555;
-  --accent:   #ea6500;
-  --accent2:  #f97316;
-  --border:   rgba(234,101,0,0.2);
-  --surface:  #ffffff;
-  --overlay:  rgba(245,242,237,0.92);
+  --bg: #f5f2ed;
+  --bg2: #eae7e2;
+  --fg: #111111;
+  --fg2: #555555;
+  --accent: #ea6500;
+  --accent2: #f97316;
+  --border: rgba(234, 101, 0, 0.2);
+  --surface: #ffffff;
+  --overlay: rgba(245, 242, 237, 0.92);
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 html {
-  overflow: hidden;        /* fullpage handles scroll */
+  overflow: hidden;
+  /* fullpage handles scroll */
   height: 100%;
 }
 
@@ -45,9 +50,6 @@ body {
   cursor: auto;
   transition: background 0.4s ease, color 0.4s ease;
 }
-
-/* ─── CURSOR (removed – system default cursor used) ─── */
-#cursor-dot, #cursor-ring { display: none !important; }
 
 /* ─── FULLPAGE SECTIONS ─── */
 #fullpage {
@@ -87,14 +89,14 @@ body {
   width: 28px;
   height: 2px;
   background: var(--fg2);
-  transition: width 0.35s cubic-bezier(.23,1,.32,1),
-              background 0.35s ease,
-              height 0.2s ease;
+  transition: width 0.35s cubic-bezier(.23, 1, .32, 1),
+    background 0.35s ease,
+    height 0.2s ease;
   transform-origin: left center;
 }
 
 .side-nav-item.active .side-nav-bar,
-.side-nav-item:hover  .side-nav-bar {
+.side-nav-item:hover .side-nav-bar {
   width: 48px;
   background: var(--accent);
   height: 2.5px;
@@ -121,7 +123,9 @@ body {
 /* ─── TOP NAV ─── */
 #top-nav {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 9900;
   display: flex;
   align-items: center;
@@ -191,7 +195,7 @@ body::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s cubic-bezier(.23,1,.32,1);
+  transition: transform 0.6s cubic-bezier(.23, 1, .32, 1);
 }
 
 .work-card:hover .work-card-img .img-placeholder {
@@ -199,9 +203,18 @@ body::after {
 }
 
 /* ─── SCROLLBAR ─── */
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 2px;
+}
 
 /* ─── ACCENT LINE ─── */
 .accent-line {
@@ -212,8 +225,21 @@ body::after {
 }
 
 /* ─── MARQUEE ─── */
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.marquee-inner { animation: marquee 20s linear infinite; display: flex; width: 200%; }
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-inner {
+  animation: marquee 20s linear infinite;
+  display: flex;
+  width: 200%;
+}
 
 /* ─── MOBILE NAV MENU ─── */
 #mobile-menu {
@@ -254,7 +280,7 @@ body::after {
   height: 16px;
   border-radius: 50%;
   background: var(--accent);
-  transition: transform 0.3s cubic-bezier(.23,1,.32,1);
+  transition: transform 0.3s cubic-bezier(.23, 1, .32, 1);
 }
 
 [data-theme="light"] .theme-toggle-knob {
@@ -273,24 +299,54 @@ body::after {
 
 /* ─── FLOAT ANIM ─── */
 @keyframes float {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-14px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-14px);
+  }
 }
-.float { animation: float 7s ease-in-out infinite; }
+
+.float {
+  animation: float 7s ease-in-out infinite;
+}
+
 @keyframes float2 {
-  0%,100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-10px) rotate(3deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
 }
-.float2 { animation: float2 9s ease-in-out infinite; }
+
+.float2 {
+  animation: float2 9s ease-in-out infinite;
+}
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
-  body { cursor: auto; }
-  #cursor-dot, #cursor-ring { display: none; }
+  body {
+    cursor: auto;
+  }
+
+  #cursor-dot,
+  #cursor-ring {
+    display: none;
+  }
 
   /* Sidebar becomes a minimal bottom indicator bar on mobile */
   #side-nav {
-    left: 0; right: 0; bottom: 0; top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
     transform: none;
     flex-direction: row;
     justify-content: center;
@@ -319,9 +375,9 @@ body::after {
     background: var(--fg2);
     opacity: 0.4;
     transform-origin: bottom center;
-    transition: height 0.35s cubic-bezier(.23,1,.32,1),
-                background 0.35s ease,
-                width 0.2s ease;
+    transition: height 0.35s cubic-bezier(.23, 1, .32, 1),
+      background 0.35s ease,
+      width 0.2s ease;
   }
 
   .side-nav-item.active .side-nav-bar {
@@ -342,8 +398,14 @@ body::after {
 }
 
 /* ─── Hidden scrollbar for sub-pages ─── */
-.page-scroll::-webkit-scrollbar { display: none; }
-.page-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.page-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.page-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
 /* ─── FIX 1: Mobile light theme – hero text contrast ─── */
 /* Work detail pages use hardcoded rgba(255,255,255,x) on hero titles.
@@ -352,12 +414,15 @@ body::after {
   [data-theme="light"] .hero-row h1 {
     color: var(--fg) !important;
   }
+
   [data-theme="light"] .hero-row .label {
     color: var(--fg2) !important;
   }
+
   [data-theme="light"] .scroll-hint-text {
     color: var(--fg2) !important;
   }
+
   [data-theme="light"] .scroll-line {
     background: linear-gradient(to bottom, var(--fg2), transparent) !important;
   }
@@ -368,14 +433,17 @@ body::after {
 [data-theme="light"] .hero-row h1 {
   color: var(--fg) !important;
 }
+
 [data-theme="light"] .hero-row .label {
   color: var(--fg2) !important;
 }
+
 [data-theme="light"] .scroll-hint-text {
   color: var(--fg2) !important;
 }
+
 [data-theme="light"] .scroll-line {
-  background: linear-gradient(to bottom, rgba(0,0,0,.35), transparent) !important;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, .35), transparent) !important;
 }
 
 /* ─── FIX 2: Navbar scroll background (JS adds .scrolled class) ─── */

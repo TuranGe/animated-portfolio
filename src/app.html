@@ -1,21 +1,24 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Portfolio — Creative Developer & Designer" />
-    <script>
-      try {
-        var t = localStorage.getItem('kuon-theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', t);
-      } catch(e) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-    </script>
-    %sveltekit.head%
-  </head>
-  <body data-sveltekit-preload-data="off">
-    <div id="app">%sveltekit.body%</div>
-  </body>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="TuranGe — Creative Developer & Designer" />
+  <script>
+    try {
+      var t = localStorage.getItem('kuon-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
+  %sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="off">
+  <div id="app">%sveltekit.body%</div>
+</body>
+
 </html>

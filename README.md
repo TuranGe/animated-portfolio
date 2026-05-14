@@ -1,49 +1,49 @@
 # 🌙 TuranGe — SvelteKit Portfolio
 
-Bu proje, ödüllü web tasarımcısı Kuon Yagi'nin ikonik portföy sitesinden ilham alınarak geliştirilmiş, etkileşimli ve modern bir web portföyüdür. Projenin kodlama, tasarım uyarlaması ve özellikle karmaşık animasyonlarının koda dökülmesi **Claude AI** yapay zeka asistanı kullanılarak gerçekleştirilmiştir.
+This project is an interactive and modern web portfolio inspired by the iconic portfolio site of the award-winning web designer Kuon Yagi. The coding, design adaptation, and especially the implementation of the complex animations of the project were carried out using the **Claude AI** artificial intelligence assistant.
 
-Yapay zeka destekli web geliştirmenin gücünü sergileyen bu site, estetik tasarımı, özel sayfa geçişleri ve akıcı etkileşimleriyle orijinal projenin ruhunu yansıtmayı amaçlamaktadır.
+Showcasing the power of AI-assisted web development, this site aims to reflect the spirit of the original project with its aesthetic design, custom page transitions, and fluid interactions.
 
-## 🚀 Canlı Demo
-- Projeyi canlı olarak incelemek için: **[TuranGe Portfolio - Vercel](https://turange-animated-portfolio.vercel.app/)**
-- Kuon Yagi'nin portföy sitesi için: **[Kuon Yagi - Netlify](https://kuon-yagi-portfolio.netlify.app/)**
+## 🚀 Live Demo
+- To view the live project: **[TuranGe Portfolio - Vercel](https://turange-animated-portfolio.vercel.app/)**
+- For Kuon Yagi's portfolio site: **[Kuon Yagi - Netlify](https://kuon-yagi-portfolio.netlify.app/)**
 
-## 🤖 Claude AI ile Geliştirme Süreci
-Bu proje, gelişmiş bir yapay zeka modelinin karmaşık frontend yapılarını hayata geçirmede nasıl etkili kullanılabileceğine dair harika bir örnektir. Claude AI özellikle şu konularda aktif rol oynamıştır:
-- SvelteKit mimarisinin, bileşen (component) yapısının ve rotaların kurgulanması.
-- GSAP ScrollTrigger entegrasyonu ve altın/koyu çift panel perde geçişi gibi gelişmiş sayfa animasyonlarının yazılması.
-- TailwindCSS kullanılarak responsive tasarımın tüm cihazlar için kusursuz hale getirilmesi.
+## 🤖 Development Process with Claude AI
+This project is a great example of how an advanced AI model can be effectively used to bring complex frontend architectures to life. Claude AI played an active role especially in the following areas:
+- Structuring the SvelteKit architecture, component structure, and routes.
+- Writing advanced page animations, such as the GSAP ScrollTrigger integration and the gold/dark double-panel curtain transition.
+- Perfecting the responsive design for all devices using TailwindCSS.
 
-## ✨ Animasyonlar ve Özellikler
-- **Sayfa Geçişleri (`PageTransition.svelte`):** GSAP ile tasarlanmış altın ve koyu renkli çift panel perde geçiş animasyonu.
-- **Scroll Etkileşimleri:** GSAP ScrollTrigger destekli kaydırma bazlı (scroll-based) reveal animasyonları.
-- **Parallax Efektleri:** Derinlik hissi veren parallax arka plan elementleri.
-- **Marquee:** Akıcı kayan yazı (marquee) efektleri.
+## ✨ Animations and Features
+- **Page Transitions (`PageTransition.svelte`):** A gold and dark colored double-panel curtain transition animation designed with GSAP.
+- **Scroll Interactions:** Scroll-based reveal animations powered by GSAP ScrollTrigger.
+- **Parallax Effects:** Parallax background elements that provide a sense of depth.
+- **Marquee:** Fluid scrolling text (marquee) effects.
 
-## 🛠️ Teknolojiler
+## 🛠️ Technologies
 - **Frontend:** SvelteKit
-- **Stil:** TailwindCSS 3 / CSS3
-- **Animasyon:** GSAP 3 (Sayfa geçişleri ve ScrollTrigger)
-- **Tipografi:** Google Fonts (Playfair Display, DM Sans, JetBrains Mono)
-- **Gereksinimler:** Node.js >= 20
+- **Styling:** TailwindCSS 3 / CSS3
+- **Animation:** GSAP 3 (Page transitions and ScrollTrigger)
+- **Typography:** Google Fonts (Playfair Display, DM Sans, JetBrains Mono)
+- **Requirements:** Node.js >= 20
 
-## 📂 Sayfa Yapısı
-- `/` — Ana sayfa
-- `/work/reile` — Horizon Studio detay
-- `/work/nova` — Nova Space detay
-- `/work/mori` — Mori Gardens detay
-- `/work/arc` — Arc Architecture detay
-- `/about` — Hakkında
-- `/contact` — İletişim
+## 📂 Page Structure
+- `/` — Home page
+- `/work/reile` — Horizon Studio details
+- `/work/nova` — Nova Space details
+- `/work/mori` — Mori Gardens details
+- `/work/arc` — Arc Architecture details
+- `/about` — About
+- `/contact` — Contact
 
-## ⚙️ Kurulum ve Çalıştırma
+## ⚙️ Installation and Setup
 
-> Paketleri yükle:
+> Install packages:
 ```bash
 npm install
 ```
 
-> Geliştirme sunucusunu başlat:
+> Start the development server:
 ```bash
 npm run dev
 ```
@@ -55,4 +55,4 @@ npm run preview
 ```
 
 ## 👨‍💻 Geliştirici Hakkında
-Yazılım geliştirme tutkusu ile makine mühendisliği disiplinini harmanlayan bir vizyonla hareket ediyorum. Bir yandan üniversitede eğitimime devam edip Teknofest İnsansız Kara Aracı (İKA) gibi projelerde yer alarak 3D modelleme (SolidWorks, Fusion 360) alanında çalışmalar yürütürken; diğer yandan SvelteKit, TypeScript ve modern web teknolojileri ile dijital dünyada estetik ve işlevsel arayüzler inşa ediyorum.
+I act with a vision that blends a passion for software development with the discipline of mechanical engineering. On one hand, I continue my education at university and take part in projects like the Teknofest Unmanned Ground Vehicle (UGV), working in the field of 3D modeling (SolidWorks, Fusion 360); on the other hand, I build aesthetic and functional interfaces in the digital world using SvelteKit, TypeScript, and modern web technologies.

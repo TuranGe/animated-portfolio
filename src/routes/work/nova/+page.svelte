@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import Nav from "$lib/Nav.svelte";
-  import { flipState } from "$lib/stores.js";
 
   const sections = [
     { label: "HOME", id: "hero" },
@@ -317,7 +316,7 @@
         >
         <div
           style="width:96px;height:64px;border-radius:6px;overflow:hidden;flex-shrink:0;
-                    background:#0d1e36;display:flex;align-items:center;justify-content:center;"
+                    background:{HERO_BG};display:flex;align-items:center;justify-content:center;"
         >
           <span style="font-size:1.4rem;opacity:.8;color:#60a5fa;">◆</span>
         </div>
