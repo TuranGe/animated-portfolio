@@ -14,10 +14,10 @@
   // solidColor = plain bg for the expanding clone
   // Each entry's solidColor MUST match the detail page's hero background exactly
   const works = [
-    { slug:'reile', num:'01', title:'Horizon Studio',   cat:'Brand Identity / Web Design', year:'2024', solidColor:'#7c3a1a', icolor:'#f97316' },
-    { slug:'nova',  num:'02', title:'Nova Space',        cat:'UI/UX / Frontend',            year:'2024', solidColor:'#0d1e36', icolor:'#60a5fa' },
-    { slug:'mori',  num:'03', title:'Mori Gardens',      cat:'Web Design / Motion',         year:'2023', solidColor:'#0d2010', icolor:'#4ade80' },
-    { slug:'arc',   num:'04', title:'Arc Architecture',  cat:'Digital Presence',            year:'2023', solidColor:'#1a0f2e', icolor:'#c084fc' },
+    { slug:'reile', num:'01', title:'Horizon Studio',   cat:'Brand Identity / Web Design', year:'2026', solidColor:'#7c3a1a', icolor:'#f97316' },
+    { slug:'nova',  num:'02', title:'Nova Space',        cat:'UI/UX / Frontend',            year:'2025', solidColor:'#0d1e36', icolor:'#60a5fa' },
+    { slug:'mori',  num:'03', title:'Mori Gardens',      cat:'Web Design / Motion',         year:'2024', solidColor:'#0d2010', icolor:'#4ade80' },
+    { slug:'arc',   num:'04', title:'Arc Architecture',  cat:'Digital Presence',            year:'2024', solidColor:'#1a0f2e', icolor:'#c084fc' },
   ];
 
   let navEl;           // Nav component ref
@@ -398,7 +398,7 @@
         <!-- LEFT: text -->
         <div style="position:relative;z-index:2;">
           <span bind:this={heroLine} style="display:block;width:48px;height:2px;background:var(--accent);margin-bottom:24px;transform-origin:left;"></span>
-          <p bind:this={heroSub} class="label" style="margin-bottom:16px;opacity:0;">CREATIVE DEVELOPER — 2024</p>
+          <p bind:this={heroSub} class="label" style="margin-bottom:16px;opacity:0;">TuranGe — 2026</p>
           <h1 bind:this={heroTitle}
             style="font-family:'Playfair Display',serif;font-size:clamp(3.5rem,7vw,8rem);
                    font-weight:600;line-height:1;color:var(--fg);opacity:0;margin-bottom:40px;">
@@ -435,7 +435,7 @@
         </div>
       </div>
 
-      <span class="label" style="position:absolute;bottom:32px;right:clamp(24px,4vw,64px);color:var(--fg2);opacity:.45;">PORTFOLIO — 2024</span>
+      <span class="label" style="position:absolute;bottom:32px;right:clamp(24px,4vw,64px);color:var(--fg2);opacity:.45;">PORTFOLIO — 2026</span>
     </section>
 
     <!-- ══ SECTION 1 · WORK ══ -->
