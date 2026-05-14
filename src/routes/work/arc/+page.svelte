@@ -13,24 +13,18 @@
   const HERO_BG = "#1a0f2e";
   const ACCENT_CLR = "#c084fc";
 
+  const project = {
+    num: "04",
+    title: "Arc Architecture",
+    category: "Digital Presence",
+    year: "2024",
+    overview: `A carefully crafted digital experience pushing the boundaries of interaction and visual storytelling.`,
+    project: `A carefully crafted digital experience for a forward-thinking client, exploring new interaction paradigms while maintaining visual coherence.`,
+    approach: `Purposeful motion, typographic hierarchy, and deep respect for the user's attention and time guided every decision.`,
+  };
+
   let navEl, pageEl, scrollerEl, heroEl, gsap;
   let leaving = false;
-
-  async function goNext(href) {
-    if (leaving) return;
-    leaving = true;
-    if (!gsap) {
-      const m = await import("gsap");
-      gsap = m.gsap;
-    }
-    await gsap.to(pageEl, {
-      x: "-100%",
-      opacity: 0,
-      duration: 0.45,
-      ease: "expo.inOut",
-    });
-    goto(href);
-  }
 
   async function goBack() {
     if (leaving) return;
@@ -286,7 +280,7 @@
   });
 </script>
 
-<svelte:head><title>Arc Architecture — Portfolio</title></svelte:head>
+<svelte:head><title>{project.title} — Portfolio</title></svelte:head>
 <Nav
   bind:this={navEl}
   {sections}
@@ -326,10 +320,10 @@
             style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,3vw,2.4rem);
                      font-weight:600;color:rgba(255,255,255,.92);margin-bottom:4px;"
           >
-            Arc Architecture
+            {project.title}
           </h1>
           <p class="label" style="color:rgba(255,255,255,.4);">
-            Digital Presence — 2023
+            {project.category} — {project.year}
           </p>
         </div>
         <span style="color:{ACCENT_CLR};font-size:1.4rem;flex-shrink:0;">→</span
@@ -381,19 +375,18 @@
   >
     <div class="reveal" style="margin-bottom:48px;">
       <p class="label" style="margin-bottom:14px;color:#c084fc;">
-        04 — Digital Presence
+        {project.num} — {project.category}
       </p>
       <h2
         style="font-family:'Playfair Display',serif;font-size:clamp(3rem,9vw,8rem);
                  font-weight:600;line-height:.95;color:var(--fg);margin-bottom:40px;"
       >
-        Arc Architecture
+        {project.title}
       </h2>
       <p
         style="color:var(--fg2);max-width:620px;line-height:1.85;font-size:1.05rem;"
       >
-        A carefully crafted digital experience pushing the boundaries of
-        interaction and visual storytelling.
+        {project.overview}
       </p>
     </div>
     <div
@@ -403,16 +396,13 @@
       <div>
         <p class="label" style="margin-bottom:16px;">THE PROJECT</p>
         <p style="color:var(--fg2);line-height:1.85;">
-          A carefully crafted digital experience for a forward-thinking client,
-          exploring new interaction paradigms while maintaining visual
-          coherence.
+          {project.project}
         </p>
       </div>
       <div>
         <p class="label" style="margin-bottom:16px;">OUR APPROACH</p>
         <p style="color:var(--fg2);line-height:1.85;">
-          Purposeful motion, typographic hierarchy, and deep respect for the
-          user's attention and time guided every decision.
+          {project.approach}
         </p>
       </div>
     </div>

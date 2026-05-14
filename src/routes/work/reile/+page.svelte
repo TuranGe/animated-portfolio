@@ -19,7 +19,7 @@
     num: "01",
     title: "Horizon Studio",
     category: "Brand Identity / Web Design",
-    year: "2024",
+    year: "2026",
     client: "Horizon Creative",
     role: "Design & Development",
     duration: "3 months",
@@ -354,7 +354,7 @@
 
         <div
           style="width:96px;height:64px;border-radius:6px;overflow:hidden;flex-shrink:0;
-                    background:#7c3a1a;display:flex;align-items:center;justify-content:center;"
+                    background:{HERO_BG};display:flex;align-items:center;justify-content:center;"
         >
           <span style="font-size:1.4rem;opacity:.8;color:{ACCENT_CLR};">◆</span>
         </div>
