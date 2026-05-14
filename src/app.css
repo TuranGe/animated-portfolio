@@ -314,7 +314,7 @@ body::after {
   }
 
   .side-nav-bar {
-    width: 1.5px;
+    width: 2px;
     height: 12px;
     background: var(--fg2);
     opacity: 0.4;
