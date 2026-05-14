@@ -99,7 +99,7 @@ body {
 .side-nav-item:hover .side-nav-bar {
   width: 48px;
   background: var(--accent);
-  height: 2.5px;
+  height: 2px;
 }
 
 .side-nav-label {
