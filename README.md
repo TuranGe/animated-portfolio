@@ -5,8 +5,8 @@ Bu proje, ödüllü web tasarımcısı Kuon Yagi'nin ikonik portföy sitesinden 
 Yapay zeka destekli web geliştirmenin gücünü sergileyen bu site, estetik tasarımı, özel sayfa geçişleri ve akıcı etkileşimleriyle orijinal projenin ruhunu yansıtmayı amaçlamaktadır.
 
 ## 🚀 Canlı Demo
-Kuon Yagi'nin portföy sitesi için: **[Kuon Yagi - Netlify](https://turange-animated-portfolio.vercel.app/)**
-Projeyi canlı olarak incelemek için: **[TuranGe Portfolio - Vercel](https://kuon-yagi-portfolio.netlify.app/)**
+- Projeyi canlı olarak incelemek için: **[TuranGe Portfolio - Vercel](https://turange-animated-portfolio.vercel.app/)**
+- Kuon Yagi'nin portföy sitesi için: **[Kuon Yagi - Netlify](https://kuon-yagi-portfolio.netlify.app/)**
 
 ## 🤖 Claude AI ile Geliştirme Süreci
 Bu proje, gelişmiş bir yapay zeka modelinin karmaşık frontend yapılarını hayata geçirmede nasıl etkili kullanılabileceğine dair harika bir örnektir. Claude AI özellikle şu konularda aktif rol oynamıştır:
