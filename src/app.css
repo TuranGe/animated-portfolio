@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:wght@300;400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── THEME VARIABLES ─── */
+:root {
+  --bg:       #111111;
+  --bg2:      #1a1a1a;
+  --fg:       #f0ede8;
+  --fg2:      #a0a0a0;
+  --accent:   #f97316;
+  --accent2:  #fb923c;
+  --border:   rgba(249,115,22,0.18);
+  --surface:  #1e1e1e;
+  --overlay:  rgba(17,17,17,0.92);
+}
+
+[data-theme="light"] {
+  --bg:       #f5f2ed;
+  --bg2:      #eae7e2;
+  --fg:       #111111;
+  --fg2:      #555555;
+  --accent:   #ea6500;
+  --accent2:  #f97316;
+  --border:   rgba(234,101,0,0.2);
+  --surface:  #ffffff;
+  --overlay:  rgba(245,242,237,0.92);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html {
+  overflow: hidden;        /* fullpage handles scroll */
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'DM Sans', sans-serif;
+  height: 100%;
+  overflow: hidden;
+  cursor: auto;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* ─── CURSOR (removed – system default cursor used) ─── */
+#cursor-dot, #cursor-ring { display: none !important; }
+
+/* ─── FULLPAGE SECTIONS ─── */
+#fullpage {
+  height: 100vh;
+  width: 100%;
+}
+
+.fp-section {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── SIDE NAV DOTS ─── */
+#side-nav {
+  position: fixed;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.side-nav-bar {
+  width: 28px;
+  height: 2px;
+  background: var(--fg2);
+  transition: width 0.35s cubic-bezier(.23,1,.32,1),
+              background 0.35s ease,
+              height 0.2s ease;
+  transform-origin: left center;
+}
+
+.side-nav-item.active .side-nav-bar,
+.side-nav-item:hover  .side-nav-bar {
+  width: 48px;
+  background: var(--accent);
+  height: 2.5px;
+}
+
+.side-nav-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--fg2);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease, color 0.25s ease;
+  white-space: nowrap;
+}
+
+.side-nav-item:hover .side-nav-label,
+.side-nav-item.active .side-nav-label {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--accent);
+}
+
+/* ─── TOP NAV ─── */
+#top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9900;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+  /* Hidden by default on work/* sub-pages — GSAP reveals it via slide-down.
+     On the main page GSAP also sets initial state before animating, so this
+     default is safe everywhere: no flash before JS runs. */
+  opacity: 0;
+  transform: translateY(-60px);
+}
+
+#top-nav.scrolled {
+  background: var(--overlay);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── PAGE TRANSITION OVERLAY ─── */
+#pt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.pt-panel {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* ─── SHARED TYPOGRAPHY ─── */
+.label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.display {
+  font-family: 'Playfair Display', serif;
+}
+
+/* ─── NOISE GRAIN ─── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9000;
+  opacity: 0.3;
+}
+
+/* ─── WORK CARD HERO EXPAND TRANSITION ─── */
+.work-card-img {
+  overflow: hidden;
+  position: relative;
+}
+
+.work-card-img img,
+.work-card-img .img-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(.23,1,.32,1);
+}
+
+.work-card:hover .work-card-img .img-placeholder {
+  transform: scale(1.04);
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+/* ─── ACCENT LINE ─── */
+.accent-line {
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--accent);
+}
+
+/* ─── MARQUEE ─── */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee-inner { animation: marquee 20s linear infinite; display: flex; width: 200%; }
+
+/* ─── MOBILE NAV MENU ─── */
+#mobile-menu {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(20px);
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+}
+
+[data-theme="light"] #mobile-menu {
+  background: rgba(245, 242, 237, 0.97);
+}
+
+/* ─── THEME TOGGLE ─── */
+.theme-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+  flex-shrink: 0;
+}
+
+.theme-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 0.3s cubic-bezier(.23,1,.32,1);
+}
+
+[data-theme="light"] .theme-toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ─── DETAIL PAGE ─── */
+.detail-page {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 500;
+  overflow-y: auto;
+  transform: translateY(100%);
+}
+
+/* ─── FLOAT ANIM ─── */
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+.float { animation: float 7s ease-in-out infinite; }
+@keyframes float2 {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-10px) rotate(3deg); }
+}
+.float2 { animation: float2 9s ease-in-out infinite; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  body { cursor: auto; }
+  #cursor-dot, #cursor-ring { display: none; }
+
+  /* Sidebar becomes a minimal bottom indicator bar on mobile */
+  #side-nav {
+    left: 0; right: 0; bottom: 0; top: auto;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 18px;
+    padding: 14px 32px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: none;
+    z-index: 200;
+  }
+
+  .side-nav-item {
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+    justify-content: flex-end;
+    height: 24px;
+  }
+
+  .side-nav-bar {
+    width: 1.5px;
+    height: 12px;
+    background: var(--fg2);
+    opacity: 0.4;
+    transform-origin: bottom center;
+    transition: height 0.35s cubic-bezier(.23,1,.32,1),
+                background 0.35s ease,
+                width 0.2s ease;
+  }
+
+  .side-nav-item.active .side-nav-bar {
+    height: 22px;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .side-nav-item:hover .side-nav-bar {
+    height: 18px;
+    background: var(--fg2);
+    opacity: 0.7;
+  }
+
+  .side-nav-label {
+    display: none;
+  }
+}
+
+/* ─── Hidden scrollbar for sub-pages ─── */
+.page-scroll::-webkit-scrollbar { display: none; }
+.page-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ─── FIX 1: Mobile light theme – hero text contrast ─── */
+/* Work detail pages use hardcoded rgba(255,255,255,x) on hero titles.
+   On light theme these become invisible. Force readable dark colours. */
+@media (max-width: 768px) {
+  [data-theme="light"] .hero-row h1 {
+    color: var(--fg) !important;
+  }
+  [data-theme="light"] .hero-row .label {
+    color: var(--fg2) !important;
+  }
+  [data-theme="light"] .scroll-hint-text {
+    color: var(--fg2) !important;
+  }
+  [data-theme="light"] .scroll-line {
+    background: linear-gradient(to bottom, var(--fg2), transparent) !important;
+  }
+}
+
+/* Also apply on all screen sizes for light theme – the white text is always
+   invisible on the #f5f2ed background regardless of viewport width */
+[data-theme="light"] .hero-row h1 {
+  color: var(--fg) !important;
+}
+[data-theme="light"] .hero-row .label {
+  color: var(--fg2) !important;
+}
+[data-theme="light"] .scroll-hint-text {
+  color: var(--fg2) !important;
+}
+[data-theme="light"] .scroll-line {
+  background: linear-gradient(to bottom, rgba(0,0,0,.35), transparent) !important;
+}
+
+/* ─── FIX 2: Navbar scroll background (JS adds .scrolled class) ─── */
+/* Already defined above as #top-nav.scrolled — ensure it also applies on sub-pages */
+.detail-page #top-nav.scrolled,
+#top-nav.scrolled {
+  background: var(--overlay);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}

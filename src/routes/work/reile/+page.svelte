@@ -1,0 +1,387 @@
+<script>
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import Nav from '$lib/Nav.svelte';
+  import { flipState } from '$lib/stores.js';
+
+  const sections = [
+    { label:'HOME', id:'hero' }, { label:'WORK', id:'work' },
+    { label:'ABOUT', id:'about' }, { label:'CONTACT', id:'contact' },
+  ];
+
+  // Must match solidColor / icolor in +page.svelte works array exactly
+  const HERO_BG    = '#7c3a1a';
+  const ACCENT_CLR = '#f97316';
+
+  const project = {
+    slug:'reile', num:'01', title:'Horizon Studio',
+    category:'Brand Identity / Web Design', year:'2024',
+    client:'Horizon Creative', role:'Design & Development', duration:'3 months',
+    tags:['Branding','Web Design','Motion','Svelte'],
+    overview:`Horizon Studio needed a digital presence that matched their bold, boundary-pushing creative philosophy. The brief called for something that would feel as innovative as the work they produce.`,
+    challenge:`Translating the studio's physical work — large-scale installations and printed materials — into a digital medium that captured the same tactile quality and visual weight.`,
+    solution:`A system of curtain transitions, scroll-driven reveals, and typographic animations creating a sense of physical movement through space.`,
+  };
+
+  let navEl, pageEl, scrollerEl, heroEl, gsap;
+  let leaving = false;
+
+  async function goNext(href) {
+    if (leaving) return;
+    leaving = true;
+    if (!gsap) { const m = await import('gsap'); gsap = m.gsap; }
+    await gsap.to(pageEl, { x: '-100%', opacity: 0, duration: 0.45, ease: 'expo.inOut' });
+    goto(href);
+  }
+
+  async function goBack() {
+    if (leaving) return;
+    leaving = true;
+    if (!gsap) { const m = await import('gsap'); gsap = m.gsap; }
+
+    let state = null;
+    try { const raw = sessionStorage.getItem('flipState'); if (raw) state = JSON.parse(raw); } catch(e) {}
+    if (!state) { goto('/'); return; }
+
+    // ── Symmetric exit: mirror of onMount entry animations ──
+    // Scroll to top first so hero is fully visible for the shrink animation
+    if (scrollerEl && scrollerEl.scrollTop > 0) {
+      await gsap.to(scrollerEl, { scrollTop: 0, duration: 0.35, ease: 'expo.inOut' });
+    }
+
+    const topNav = document.getElementById('top-nav');
+    const bodyContent = pageEl.querySelector('.page-body');
+    const passiveEls  = pageEl.querySelectorAll('.hero-fade, .scroll-hint');
+
+    // Fire all exit animations simultaneously — durations mirror onMount entry exactly
+    if (topNav)      gsap.to(topNav,      { y: -60, opacity: 0, duration: 0.85, ease: 'expo.in' });
+    if (bodyContent) gsap.to(bodyContent, { opacity: 0,          duration: 1.0,  ease: 'power2.in' });
+    gsap.to(passiveEls,                  { opacity: 0,          duration: 1.1,  ease: 'power2.in' });
+    // Fade out ambient glows
+    pageEl.querySelectorAll('.hero-glow').forEach(el => {
+      el.style.transition = 'opacity 0.6s ease';
+      el.style.opacity = '0';
+    });
+    await navEl?.hideBackAnim();
+
+    // Use the hero section rect as the animated box (start of shrink animation)
+    const heroRect = heroEl.getBoundingClientRect();
+    // Use the inner flex-row rect for pixel-perfect content alignment
+    const heroRow     = heroEl.querySelector('.hero-row');
+    const heroRowInner = heroRow ? heroRow.querySelector('div') : null;
+    const rowRect      = heroRowInner ? heroRowInner.getBoundingClientRect() : heroRect;
+
+    // Hero padding (horizontal only — vertical centering via flex on clone)
+    const padLeft = rowRect.left - heroRect.left;
+    // Card target padding (horizontal)
+    const cardPadLeft = state.rect.padLeft ?? 0;
+
+    // Vertical: use padding-top so content position is explicit and animatable.
+    // Start: vertically center the row inside the hero (same as hero's align-items:center).
+    const heroH   = heroRect.height;
+    const rowH    = rowRect.height;
+    const startPadTop = Math.max(0, (heroH - rowH) / 2);
+    // End: card's computed padTop (distance from card top to inner row top)
+    const endPadTop   = state.rect.padTop ?? 28;
+
+    // Clone: full hero section, padding-based vertical alignment (no flex centering)
+    const clone = document.createElement('div');
+    clone.style.cssText = `
+      position:fixed;
+      left:${heroRect.left}px; top:${heroRect.top}px;
+      width:${heroRect.width}px; height:${heroRect.height}px;
+      background:var(--bg); z-index:9999; pointer-events:none; overflow:hidden;
+      display:block;
+      padding:${startPadTop}px 0 0 0; margin:0; box-sizing:border-box;
+    `;
+
+    // Row wrapper carries horizontal padding — animated to card's padLeft
+    const rowWrapper = document.createElement('div');
+    rowWrapper.style.cssText = `
+      width:100%; display:flex; align-items:center;
+      padding:0 ${padLeft}px;
+      box-sizing:border-box; flex-shrink:0;
+    `;
+
+    // Clone the INNER flex div (not the .hero-row wrapper) so flex layout is preserved:
+    // the inner div IS the flex container with gap:20px and flex:1 on title → arrow stays right.
+    const sourceRow = heroRowInner || heroRow;
+    if (sourceRow) {
+      const rowCopy = sourceRow.cloneNode(true);
+      // Preserve the flex container exactly — only reset GSAP artifacts
+      rowCopy.style.width      = '100%';
+      rowCopy.style.flexShrink = '0';
+      rowCopy.style.padding    = '0';
+      rowCopy.style.margin     = '0';
+      rowCopy.style.boxSizing  = 'border-box';
+      rowCopy.style.transform  = '';
+      rowCopy.style.opacity    = '1';
+      rowCopy.querySelectorAll('*').forEach(el => {
+        const c = window.getComputedStyle(el);
+        if (c.color) el.style.color = c.color;
+        el.style.transform = '';
+        el.style.opacity   = '1';
+      });
+      // ── Theme-aware colour fix: override hardcoded whites with live CSS vars ──
+      const _cs  = getComputedStyle(document.documentElement);
+      const _fg  = _cs.getPropertyValue('--fg').trim();
+      const _fg2 = _cs.getPropertyValue('--fg2').trim();
+      rowCopy.querySelectorAll('h1,h2,h3').forEach(el => { el.style.color = _fg;  });
+      rowCopy.querySelectorAll('.label')  .forEach(el => { el.style.color = _fg2; });
+      rowWrapper.appendChild(rowCopy);
+    }
+    clone.appendChild(rowWrapper);
+    document.body.appendChild(clone);
+    heroEl.style.visibility = 'hidden';
+
+    // Expose clone + rowWrapper globally so runReturnAnimation() on the home page
+    // can kill the tween and redirect to the live card rect (fixes Next Project stale ref).
+    window.__returnClone      = clone;
+    window.__returnRowWrapper = rowWrapper;
+    window.__returnEndPadTop  = endPadTop;
+    window.__returnCardPadLeft = cardPadLeft;
+
+    goto('/');
+
+    // Shrink: animate size, position, and both axes of padding simultaneously.
+    // runReturnAnimation() may kill & restart these tweens with corrected coordinates.
+    gsap.to(rowWrapper, {
+      paddingLeft: cardPadLeft, paddingRight: cardPadLeft,
+      duration: 0.75, ease: 'expo.inOut'
+    });
+    await gsap.to(clone, {
+      left: state.rect.left, top: state.rect.top,
+      width: state.rect.width, height: state.rect.height,
+      paddingTop: endPadTop,
+      duration: 0.75, ease: 'expo.inOut'
+    });
+    clone.remove();
+    window.__returnClone = null;
+    window.__returnRowWrapper = null;
+  }
+
+  onMount(async () => {
+    // Remove the fullscreen expand clone immediately so page animations are visible
+    let navigatingExpandClone = false;
+    if (typeof window !== 'undefined' && window.__expandClone) {
+      window.__expandClone.remove();
+      window.__expandClone = null;
+      navigatingExpandClone = true;
+    }
+    const m  = await import('gsap');
+    const st = await import('gsap/ScrollTrigger');
+    gsap = m.gsap;
+    gsap.registerPlugin(st.ScrollTrigger);
+    scrollerEl = pageEl;
+    // Fix: update flipState.cardIdx to match THIS page's card,
+    // so goBack always shrinks to the correct card (handles Next Project nav)
+    try {
+      const raw = sessionStorage.getItem('flipState');
+      if (raw) {
+        const fs = JSON.parse(raw);
+        fs.cardIdx = 0;
+        fs.slug = 'reile';
+        fs.solidColor = '#7c3a1a';
+        sessionStorage.setItem('flipState', JSON.stringify(fs));
+      }
+    } catch(e) {}
+
+    const topNav = document.getElementById('top-nav');
+
+    // ── 1. Lock initial states immediately (before any frame renders animated) ──
+    if (topNav) gsap.set(topNav, { opacity: 0, y: -60 });
+    const passiveEls = pageEl.querySelectorAll('.hero-fade, .scroll-hint');
+    gsap.set(passiveEls, { opacity: 0 });
+    const bodyEl = pageEl.querySelector('.page-body');
+    if (bodyEl) gsap.set(bodyEl, { opacity: 0 });
+    // Slide-in only when coming from another project (no expand clone)
+    const fromNext = !(window.__expandClone);
+    if (!navigatingExpandClone) gsap.set(pageEl, { x: '6%', opacity: 0 });
+
+    // ── 2. Two rAF frames so DOM is fully painted before animating ──
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(r));
+
+    // ── 3. Animate in ──
+
+    // Navbar slides down
+    if (topNav) {
+      gsap.fromTo(topNav, { opacity: 0, y: -60 }, { opacity: 1, y: 0, duration: 0.85, ease: "expo.out", delay: 0.05 });
+    }
+
+    // Back button — gsapReady promise in Nav ensures no race condition
+    navEl?.showBackAnim();
+    if (fromNext) gsap.to(pageEl, { x: 0, opacity: 1, duration: 0.5, ease: 'expo.out', delay: 0.05 });
+
+    // Hero-fade gradient + scroll hint
+    gsap.to(passiveEls, { opacity: 1, duration: 1.1, ease: 'power2.out', delay: 0.5 });
+
+    // Page body — opacity only (no y-shift = no layout shift)
+    if (bodyEl) {
+      gsap.to(bodyEl, { opacity: 1, duration: 1.0, ease: 'power2.out', delay: 0.35 });
+    }
+
+    // ── 4. Scroll-triggered reveals ──
+    const revealEls = gsap.utils.toArray('.reveal');
+    revealEls.forEach((el, i) => {
+      const isLast = i === revealEls.length - 1;
+      gsap.fromTo(el, { y: 40, opacity: 0 }, {
+        y: 0, opacity: 1, duration: 0.8, ease: 'expo.out',
+        scrollTrigger: { trigger: el, start: isLast ? 'top bottom' : 'top 88%', scroller: pageEl }
+      });
+    });
+
+    // Fade in ambient glows
+    requestAnimationFrame(() => {
+      const glows = pageEl.querySelectorAll('.hero-glow');
+      glows[0] && (glows[0].style.opacity = '0.16');
+      glows[1] && (glows[1].style.opacity = '0.13');
+      glows[2] && (glows[2].style.opacity = '0.10');
+    });
+  });
+</script>
+
+<svelte:head><title>{project.title} — Portfolio</title></svelte:head>
+
+<Nav bind:this={navEl} {sections} subPage={true} showSidebar={false}
+  onBack={goBack} onNavigate={() => goBack()} />
+
+<div bind:this={pageEl}
+  class="page-scroll" style="position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:100;">
+
+  <!-- HERO — content is always visible (no entry anim on hero items) -->
+  <div bind:this={heroEl}
+    style="width:100%;height:100vh;position:relative;overflow:hidden;
+           display:flex;align-items:center;flex-shrink:0;">
+
+    <!--
+      .hero-row layout must match the expanding clone from +page.svelte exactly:
+      padding: 0 clamp(24px,6vw,96px)   ← same as clone
+      gap: 20px                          ← same as clone
+      num span: width:32px               ← same as card row
+    -->
+    <div class="hero-row"
+      style="width:100%;padding:0 clamp(24px,6vw,96px);box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;">
+
+        <span class="label"
+          style="width:32px;flex-shrink:0;color:rgba(255,255,255,.45);">{project.num}</span>
+
+        <div style="width:96px;height:64px;border-radius:6px;overflow:hidden;flex-shrink:0;
+                    background:#7c3a1a;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:1.4rem;opacity:.8;color:{ACCENT_CLR};">◆</span>
+        </div>
+
+        <div style="flex:1;">
+          <h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,3vw,2.4rem);
+                     font-weight:600;color:rgba(255,255,255,.92);margin-bottom:4px;">{project.title}</h1>
+          <p class="label" style="color:rgba(255,255,255,.4);">{project.category} — {project.year}</p>
+        </div>
+
+        <span style="color:{ACCENT_CLR};font-size:1.4rem;flex-shrink:0;">→</span>
+      </div>
+    </div>
+
+    <div class="scroll-hint" style="position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+                display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <p class="label scroll-hint-text" style="color:rgba(255,255,255,.65);letter-spacing:.22em;">SCROLL</p>
+      <div class="scroll-line" style="width:1.5px;height:48px;background:linear-gradient(to bottom,rgba(255,255,255,.5),transparent);"></div>
+    </div>
+
+    
+    <!-- Ambient glow orbs — fade in on mount -->
+    <div class="hero-glow hero-glow-1" style="position:absolute;width:700px;height:700px;border-radius:50%;top:-200px;right:-60px;background:radial-gradient(circle,#f97316 0%,transparent 65%);filter:blur(90px);opacity:0;pointer-events:none;transition:opacity 2.0s ease;"></div>
+    <div class="hero-glow hero-glow-2" style="position:absolute;width:500px;height:500px;border-radius:50%;bottom:-100px;left:-80px;background:radial-gradient(circle,#f97316 0%,transparent 65%);filter:blur(80px);opacity:0;pointer-events:none;transition:opacity 2.4s ease 0.5s;"></div>
+    <div class="hero-glow hero-glow-3" style="position:absolute;width:300px;height:300px;border-radius:50%;top:35%;right:28%;background:radial-gradient(circle,#f97316 0%,transparent 65%);filter:blur(65px);opacity:0;pointer-events:none;transition:opacity 2.2s ease 1.0s;"></div>
+    
+    <div class="hero-fade"
+      style="position:absolute;bottom:0;left:0;right:0;height:200px;
+             background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none;"></div>
+  </div>
+
+  <!-- PAGE BODY -->
+  <div class="page-body" style="padding:80px clamp(24px,6vw,96px) 120px;max-width:1100px;margin:0 auto;">
+
+    <div class="reveal" style="margin-bottom:48px;">
+      <p class="label" style="margin-bottom:14px;color:{ACCENT_CLR};">{project.num} — {project.category}</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(3rem,9vw,8rem);
+                 font-weight:600;line-height:.95;color:var(--fg);margin-bottom:40px;">{project.title}</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:clamp(24px,4vw,64px);
+                  border-bottom:1px solid var(--border);padding-bottom:40px;">
+        {#each [{l:'Client',v:project.client},{l:'Role',v:project.role},{l:'Year',v:project.year},{l:'Duration',v:project.duration}] as m}
+          <div>
+            <p class="label" style="color:var(--fg2);margin-bottom:6px;">{m.l}</p>
+            <p style="font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--fg);">{m.v}</p>
+          </div>
+        {/each}
+      </div>
+    </div>
+
+    <div class="reveal" style="display:grid;grid-template-columns:1fr 2.5fr;gap:48px;margin-bottom:80px;align-items:start;">
+      <div>
+        <p class="label" style="margin-bottom:10px;">OVERVIEW</p>
+        <div style="width:40px;height:2px;background:{ACCENT_CLR};"></div>
+      </div>
+      <p style="font-family:'Playfair Display',serif;font-size:clamp(1.2rem,2vw,1.6rem);
+                line-height:1.65;font-weight:300;color:var(--fg);">{project.overview}</p>
+    </div>
+
+    <div class="reveal" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:80px;">
+      {#each project.tags as tag}
+        <span class="label" style="border:1px solid var(--border);padding:8px 16px;color:{ACCENT_CLR};">{tag}</span>
+      {/each}
+    </div>
+
+    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:80px;">
+      <div>
+        <p class="label" style="margin-bottom:16px;">THE CHALLENGE</p>
+        <p style="color:var(--fg2);line-height:1.85;">{project.challenge}</p>
+      </div>
+      <div>
+        <p class="label" style="margin-bottom:16px;">THE SOLUTION</p>
+        <p style="color:var(--fg2);line-height:1.85;">{project.solution}</p>
+      </div>
+    </div>
+
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:80px;">
+      {#each Array(6) as _, i}
+        <div style="aspect-ratio:4/3;border-radius:6px;overflow:hidden;border:1px solid var(--border);
+                    background:linear-gradient(135deg,var(--bg2),var(--bg));">
+          <div style="width:100%;height:100%;display:flex;align-items:flex-end;padding:16px;">
+            <div style="width:100%;">
+              <div style="height:7px;border-radius:2px;width:60%;margin-bottom:6px;background:{ACCENT_CLR}33;"></div>
+              <div style="height:5px;border-radius:2px;width:40%;background:rgba(255,255,255,.06);"></div>
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+
+    <div class="reveal" style="display:flex;justify-content:space-between;align-items:center;
+                                padding-top:40px;border-top:1px solid var(--border);">
+      <button on:click={goBack}
+        style="display:flex;align-items:center;gap:12px;background:none;border:none;cursor:pointer;
+               color:var(--fg2);transition:color .3s;"
+        onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--fg2)'">
+        <span>←</span><span class="label">ALL WORK</span>
+      </button>
+      <a href="/work/nova" class="label"
+        on:click|preventDefault={() => goNext('/work/nova')}
+        style="display:flex;align-items:center;gap:12px;color:var(--fg2);text-decoration:none;transition:color .3s;"
+        onmouseenter="this.style.color='var(--accent)'" onmouseleave="this.style.color='var(--fg2)'">
+        NEXT PROJECT <span>→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .label { font-family:'JetBrains Mono',monospace; font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; }
+  .reveal { opacity:0; }
+
+  .hero-glow { will-change: opacity; }
+  .scroll-hint-text { animation: scrollPulse 2.4s ease-in-out infinite; }
+  @keyframes scrollPulse { 0%,100%{opacity:.65;} 50%{opacity:.25;} }
+  .scroll-line { animation: scrollDrop 2.4s ease-in-out infinite; }
+  @keyframes scrollDrop { 0%,100%{transform:scaleY(1);transform-origin:top;} 50%{transform:scaleY(.6);} }
+</style>
