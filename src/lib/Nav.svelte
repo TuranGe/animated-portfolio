@@ -19,14 +19,38 @@
     _resolveGsap = r;
   });
 
+  function applyTheme(next) {
+    if (typeof document === "undefined") return;
+    document.documentElement.setAttribute("data-theme", next);
+    if (typeof localStorage !== "undefined")
+      localStorage.setItem("kuon-theme", next);
+    theme.set(next);
+  }
+
   function toggleTheme() {
-    theme.update((t) => {
-      const next = t === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      if (typeof localStorage !== "undefined")
-        localStorage.setItem("kuon-theme", next);
-      return next;
-    });
+    if (typeof document === "undefined") return;
+
+    const root = document.documentElement;
+    const current = root.getAttribute("data-theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+
+    // dark -> light = forward
+    // light -> dark = reverse
+    root.dataset.vtDir = next === "light" ? "forward" : "reverse";
+
+    if ("startViewTransition" in document) {
+      const transition = document.startViewTransition(() => {
+        applyTheme(next);
+      });
+
+      transition.finished.finally(() => {
+        delete root.dataset.vtDir;
+      });
+
+      return;
+    }
+
+    applyTheme(next);
   }
 
   function goSection(i) {
@@ -251,6 +275,8 @@
   <div id="mobile-menu">
     {#each sections as s, i}
       <button
+        class="mobile-menu-item"
+        class:active={$currentSection === i}
         on:click={() => goSection(i)}
         style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:600;
                background:none;border:none;

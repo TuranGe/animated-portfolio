@@ -56,12 +56,18 @@
   let cardEls = []; // each full row button
   let workSectionEl; // section 1 div
 
+  const getViewportHeight = () =>
+    typeof window !== "undefined" ? window.innerHeight : 0;
+  const sectionOffset = (idx) => -(idx * getViewportHeight());
+
   // Pre-compute initial Y so fullpage renders at correct position BEFORE GSAP runs
   // This eliminates the flash/jump when returning from a work detail page
   let initY = "0vh";
   if (typeof sessionStorage !== "undefined") {
     try {
-      if (sessionStorage.getItem("flipState")) initY = "-100vh";
+      if (sessionStorage.getItem("flipState")) {
+        initY = `${sectionOffset(1)}px`;
+      }
     } catch (e) {}
   }
 
@@ -99,6 +105,27 @@
     const padTop = rowRect.top - btnRect.top;
     const padLeft = rowRect.left - btnRect.left;
 
+    const subtitleLabel =
+      cardEl.querySelector("p.label") || cardEl.querySelector(".label");
+    const titleEl =
+      cardEl.querySelector(".row-title") || cardEl.querySelector("h3");
+    let labelFontSize;
+    let labelLetterSpacing;
+    let labelTextTransform;
+    let labelColor;
+    let titleColor;
+    if (subtitleLabel) {
+      const csLabel = getComputedStyle(subtitleLabel);
+      labelFontSize = csLabel.fontSize;
+      labelLetterSpacing = csLabel.letterSpacing;
+      labelTextTransform = csLabel.textTransform;
+      labelColor = csLabel.color;
+    }
+    if (titleEl) {
+      const csTitle = getComputedStyle(titleEl);
+      titleColor = csTitle.color;
+    }
+
     // Store cardIdx and computed padding so runReturnAnimation/goBack can target precisely
     flipState.set({
       rect: {
@@ -112,11 +139,22 @@
       solidColor,
       slug,
       cardIdx,
+      labelFontSize,
+      labelLetterSpacing,
+      labelTextTransform,
+      labelColor,
+      titleColor,
     });
 
-    // Hero-row target padding (what the detail page uses) — for smooth X expansion
-    // clamp(24px,6vw,96px) computed at runtime
-    const targetPadH = Math.min(96, Math.max(24, window.innerWidth * 0.06));
+    // Hero-row target padding (what the detail page uses) — read from live styles
+    const targetPadH = (() => {
+      const workInner = workSectionEl?.querySelector(".work-inner");
+      if (workInner) {
+        const padLeft = parseFloat(getComputedStyle(workInner).paddingLeft);
+        if (!Number.isNaN(padLeft) && padLeft > 0) return padLeft;
+      }
+      return Math.min(96, Math.max(24, window.innerWidth * 0.06));
+    })();
 
     // Clone outer: sized like the card button, vertically centers content via flex
     const clone = document.createElement("div");
@@ -140,9 +178,11 @@
     `;
 
     if (innerRow) {
+      const rowGapRaw = getComputedStyle(innerRow).gap;
+      const rowGap = rowGapRaw && rowGapRaw !== "normal" ? rowGapRaw : "20px";
       const rowCopy = innerRow.cloneNode(true);
       rowCopy.style.cssText = `
-        display:flex; align-items:center; gap:20px;
+        display:flex; align-items:center; gap:${rowGap};
         width:100%; flex-shrink:0;
         padding:0; margin:0; box-sizing:border-box;
         transform:none; opacity:1;
@@ -159,11 +199,24 @@
       const cs = getComputedStyle(document.documentElement);
       const fg = cs.getPropertyValue("--fg").trim(); // e.g. #111111 or #f0ede8
       const fg2 = cs.getPropertyValue("--fg2").trim(); // e.g. #555555 or #a0a0a0
+      const titleClr = titleColor || fg;
+      const labelClr = labelColor || fg2;
       rowCopy.querySelectorAll("h3,.row-title").forEach((el) => {
-        el.style.color = fg;
+        el.style.setProperty("color", titleClr, "important");
       });
       rowCopy.querySelectorAll(".label").forEach((el) => {
-        el.style.color = fg2;
+        el.style.setProperty("color", labelClr, "important");
+      });
+      const sourceLabels = innerRow.querySelectorAll(".label");
+      const cloneLabels = rowCopy.querySelectorAll(".label");
+      cloneLabels.forEach((el, idx) => {
+        const src = sourceLabels[idx];
+        if (!src) return;
+        const csLabel = getComputedStyle(src);
+        if (labelClr) el.style.setProperty("color", labelClr, "important");
+        el.style.fontSize = csLabel.fontSize;
+        el.style.letterSpacing = csLabel.letterSpacing;
+        el.style.textTransform = csLabel.textTransform;
       });
       rowWrapper.appendChild(rowCopy);
     }
@@ -223,7 +276,7 @@
     activeIdx = 1;
     currentSection.set(1);
     const fp = document.getElementById("fullpage");
-    if (fp && gsap) gsap.set(fp, { y: "-100vh" });
+    if (fp && gsap) gsap.set(fp, { y: sectionOffset(1) });
 
     // Wait two frames so DOM fully settles at the correct scroll position
     await new Promise((r) => requestAnimationFrame(r));
@@ -265,6 +318,28 @@
       gsap.killTweensOf(existingWrapper);
       const endPadTop = window.__returnEndPadTop ?? state.rect.padTop ?? 28;
       const cardPadLeft = window.__returnCardPadLeft ?? liveRect.padLeft ?? 0;
+      const labelEls = window.__returnLabelEls;
+      const labelSize =
+        window.__returnLabelFontSize ?? state.labelFontSize ?? null;
+      const labelSpacing =
+        window.__returnLabelLetterSpacing ?? state.labelLetterSpacing ?? null;
+      const labelTransform =
+        window.__returnLabelTextTransform ?? state.labelTextTransform ?? null;
+      const labelClr = state.labelColor ?? null;
+      if (labelEls && labelSize) {
+        labelEls.forEach((el) => {
+          if (labelClr) el.style.setProperty("color", labelClr, "important");
+          if (labelSpacing) el.style.letterSpacing = labelSpacing;
+          if (labelTransform) el.style.textTransform = labelTransform;
+        });
+        gsap.killTweensOf(labelEls);
+        gsap.to(labelEls, {
+          fontSize: labelSize,
+          duration: 0.65,
+          ease: "expo.inOut",
+          overwrite: "auto",
+        });
+      }
       // Re-fire the shrink animation to the correct live coordinates
       gsap.to(existingWrapper, {
         paddingLeft: cardPadLeft,
@@ -324,19 +399,27 @@
   const sectionHashes = ["home", "work", "about", "contact"];
 
   function goToSection(idx, updateHash = true) {
-    if (idx === activeIdx || isScrolling) return;
-    isScrolling = true;
+    if (idx === activeIdx) return;
     activeIdx = idx;
     currentSection.set(idx);
     if (updateHash && typeof history !== "undefined") {
       history.replaceState(null, "", "#" + sectionHashes[idx]);
     }
-    gsap?.to("#fullpage", {
-      y: -(idx * 100) + "vh",
+    const fp = document.getElementById("fullpage");
+    if (!gsap || !fp) {
+      if (fp) fp.style.transform = `translateY(${sectionOffset(idx)}px)`;
+      isScrolling = false;
+      return;
+    }
+    isScrolling = true;
+    gsap.killTweensOf("#fullpage");
+    gsap.to("#fullpage", {
+      y: sectionOffset(idx),
       duration: 0.9,
       ease: "expo.inOut",
+      overwrite: "auto",
       onComplete: () => {
-        isScrolling = false;
+        if (activeIdx === idx) isScrolling = false;
       },
     });
   }
@@ -346,7 +429,7 @@
     activeIdx = idx;
     currentSection.set(idx);
     const fp = document.getElementById("fullpage");
-    if (fp && gsap) gsap.set(fp, { y: -(idx * 100) + "vh" });
+    if (fp && gsap) gsap.set(fp, { y: sectionOffset(idx) });
     isScrolling = false;
   }
 
@@ -758,9 +841,9 @@
 
     <!-- ══ SECTION 1 · WORK ══ -->
     <section
-      class="fp-section"
+      class="fp-section work-section"
       bind:this={workSectionEl}
-      style="background:var(--bg);align-items:flex-start;padding-top:80px;"
+      style="background:var(--bg);"
     >
       <!-- Ambient glows -->
       <div
@@ -769,13 +852,12 @@
       <div
         style="position:absolute;width:300px;height:300px;border-radius:50%;top:10%;left:-50px;background:radial-gradient(circle,var(--accent) 0%,transparent 65%);filter:blur(70px);opacity:.05;pointer-events:none;"
       ></div>
-      <div
-        style="width:100%;padding:0 clamp(24px,6vw,96px);overflow-y:auto;max-height:100vh;padding-bottom:40px;"
-      >
-        <div style="max-width:1100px;margin:0 auto;">
-          <div style="margin-bottom:40px;">
+      <div class="work-inner">
+        <div class="work-wrap">
+          <div class="work-head">
             <p class="label" style="margin-bottom:10px;">01 — SELECTED WORKS</p>
             <h2
+              class="work-title"
               style="font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,4rem);
                        font-weight:600;line-height:1;color:var(--fg);"
             >
@@ -789,9 +871,9 @@
               on:click={() => openWork(w.slug, cardEls[i], w.solidColor, i)}
               class="work-row-btn"
               style="display:block;width:100%;text-align:left;background:none;border:none;
-                     cursor:pointer;border-top:1px solid var(--border);padding:28px 0;"
+                     cursor:pointer;border-top:1px solid var(--border);"
             >
-              <div style="display:flex;align-items:center;gap:20px;">
+              <div class="work-row">
                 <span
                   class="label"
                   style="width:32px;flex-shrink:0;color:var(--fg2);"
@@ -799,9 +881,9 @@
                 >
 
                 <div
-                  style="width:96px;height:64px;border-radius:6px;overflow:hidden;flex-shrink:0;
-                            background:{w.solidColor};transition:transform .5s cubic-bezier(.23,1,.32,1);"
                   class="card-thumb"
+                  style="border-radius:6px;overflow:hidden;flex-shrink:0;
+                            background:{w.solidColor};transition:transform .5s cubic-bezier(.23,1,.32,1);"
                 >
                   <div
                     style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"
@@ -815,7 +897,7 @@
                 <div style="flex:1;">
                   <h3
                     class="row-title"
-                    style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,3vw,2.4rem);
+                    style="font-family:'Playfair Display',serif;
                            font-weight:600;color:var(--fg);margin-bottom:4px;transition:color .35s;"
                   >
                     {w.title}
@@ -827,13 +909,14 @@
 
                 <span
                   class="row-arrow"
-                  style="color:{w.icolor};font-size:1.4rem;flex-shrink:0;transition:transform .35s;"
+                  style="color:{w.icolor};flex-shrink:0;transition:transform .35s;"
                   >→</span
                 >
               </div>
 
               <div
-                style="height:1px;margin-top:28px;position:relative;overflow:hidden;background:var(--border);"
+                class="work-divider"
+                style="height:1px;position:relative;overflow:hidden;background:var(--border);"
               >
                 <div
                   class="hover-line"
@@ -847,7 +930,7 @@
     </section>
 
     <!-- ══ SECTION 2 · ABOUT ══ -->
-    <section class="fp-section" style="background:var(--bg);">
+    <section class="fp-section about-section" style="background:var(--bg);">
       <!-- Ambient glows -->
       <div
         style="position:absolute;width:550px;height:550px;border-radius:50%;top:-120px;left:-100px;background:radial-gradient(circle,var(--accent) 0%,transparent 65%);filter:blur(90px);opacity:.07;pointer-events:none;"
@@ -855,7 +938,7 @@
       <div
         style="position:absolute;width:350px;height:350px;border-radius:50%;bottom:-60px;right:10%;background:radial-gradient(circle,var(--accent) 0%,transparent 65%);filter:blur(75px);opacity:.06;pointer-events:none;"
       ></div>
-      <div style="width:100%;padding:0 clamp(24px,6vw,96px);">
+      <div class="about-inner">
         <div
           class="about-layout"
           style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;
@@ -864,6 +947,7 @@
           <div>
             <p class="label" style="margin-bottom:16px;">02 — ABOUT ME</p>
             <h2
+              class="about-title"
               style="font-family:'Playfair Display',serif;font-size:clamp(2.5rem,6vw,5rem);
                        font-weight:600;line-height:1.1;margin-bottom:28px;color:var(--fg);"
             >
@@ -871,6 +955,7 @@
               />that matter.
             </h2>
             <p
+              class="about-copy"
               style="color:var(--fg2);line-height:1.85;max-width:420px;margin-bottom:28px;"
             >
               I'm a creative developer passionate about the intersection of
@@ -903,6 +988,7 @@
                 style="padding:24px;border:1px solid var(--border);background:var(--surface);border-radius:4px;"
               >
                 <p
+                  class="stat-value"
                   style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:600;color:var(--accent);margin-bottom:4px;"
                 >
                   {s.n}
@@ -985,6 +1071,52 @@
     display: flex;
     align-items: center;
   }
+  .work-section {
+    align-items: flex-start;
+    padding-top: 80px;
+  }
+  .work-inner {
+    width: 100%;
+    padding: 0 var(--work-row-pad-h);
+    padding-bottom: 40px;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  .work-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .work-head {
+    margin-bottom: 40px;
+  }
+  .work-row {
+    display: flex;
+    align-items: center;
+    gap: var(--work-row-gap);
+  }
+  .work-row-btn {
+    padding: 28px 0;
+  }
+  .card-thumb {
+    width: var(--work-thumb-w);
+    height: var(--work-thumb-h);
+  }
+  .row-title {
+    font-size: var(--work-title-size);
+  }
+  .row-arrow {
+    font-size: var(--work-arrow-size);
+  }
+  .work-section .label {
+    font-size: var(--work-label-size);
+  }
+  .work-divider {
+    margin-top: 28px;
+  }
+  .about-inner {
+    width: 100%;
+    padding: 0 clamp(24px, 6vw, 96px);
+  }
   .work-row-btn:hover .row-title {
     color: var(--accent);
   }
@@ -1027,17 +1159,59 @@
   @media (max-width: 640px) {
     .fp-section {
       align-items: flex-start !important;
-      padding-top: 80px !important;
+      padding-top: 72px !important;
     }
   }
   @media (max-width: 768px) {
+    .fp-section {
+      height: 100dvh;
+      max-height: 100dvh;
+    }
+    .work-section {
+      padding-top: 72px;
+    }
+    .work-inner {
+      height: 100%;
+      max-height: 100%;
+      overflow: hidden;
+      padding-bottom: 16px;
+    }
+    .work-head {
+      margin-bottom: 24px;
+    }
+    .work-title {
+      font-size: clamp(1.6rem, 5vw, 2.4rem) !important;
+    }
+    .work-row-btn {
+      padding: 16px 0;
+    }
+    .work-divider {
+      margin-top: 16px;
+    }
+    .about-inner {
+      padding: 0 clamp(20px, 5vw, 48px);
+    }
+    .about-title {
+      font-size: clamp(2rem, 7vw, 3rem) !important;
+      margin-bottom: 16px !important;
+    }
+    .about-copy {
+      margin-bottom: 20px !important;
+      line-height: 1.7 !important;
+    }
     .about-layout {
       grid-template-columns: 1fr !important;
-      gap: clamp(32px, 6vw, 48px) !important;
+      gap: clamp(20px, 5vw, 32px) !important;
     }
     .stats-grid {
       grid-template-columns: 1fr 1fr !important;
-      gap: 12px !important;
+      gap: 10px !important;
+    }
+    .glow-card {
+      padding: 16px !important;
+    }
+    .stat-value {
+      font-size: 2rem !important;
     }
     /* Hero: stack vertically — text on top, SVG below */
     .hero-grid {
@@ -1070,10 +1244,20 @@
   }
   @media (max-width: 480px) {
     .stats-grid {
-      grid-template-columns: 1fr !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
     }
     .glow-card {
-      padding: 18px !important;
+      padding: 14px !important;
+    }
+    .stat-value {
+      font-size: 1.7rem !important;
+    }
+    .work-row-btn {
+      padding: 12px 0;
+    }
+    .work-divider {
+      margin-top: 12px;
     }
   }
 </style>

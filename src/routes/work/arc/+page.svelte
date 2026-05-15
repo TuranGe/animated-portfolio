@@ -141,6 +141,21 @@
       rowCopy.querySelectorAll(".label").forEach((el) => {
         el.style.color = _fg2;
       });
+      const titleClr = state.titleColor ?? null;
+      const labelClr = state.labelColor ?? null;
+      if (titleClr) {
+        rowCopy.querySelectorAll("h1,h2,h3").forEach((el) => {
+          el.style.setProperty("color", titleClr, "important");
+        });
+      }
+      rowCopy.querySelectorAll(".label").forEach((el) => {
+        if (labelClr) el.style.setProperty("color", labelClr, "important");
+        if (state.labelFontSize) el.style.fontSize = state.labelFontSize;
+        if (state.labelLetterSpacing)
+          el.style.letterSpacing = state.labelLetterSpacing;
+        if (state.labelTextTransform)
+          el.style.textTransform = state.labelTextTransform;
+      });
       rowWrapper.appendChild(rowCopy);
     }
     clone.appendChild(rowWrapper);
@@ -153,11 +168,31 @@
     window.__returnRowWrapper = rowWrapper;
     window.__returnEndPadTop = endPadTop;
     window.__returnCardPadLeft = cardPadLeft;
+    const labelTargets = rowWrapper.querySelectorAll(".label");
+    window.__returnLabelEls = labelTargets;
+    window.__returnLabelFontSize = state.labelFontSize ?? null;
+    window.__returnLabelLetterSpacing = state.labelLetterSpacing ?? null;
+    window.__returnLabelTextTransform = state.labelTextTransform ?? null;
 
     goto("/");
 
     // Shrink: animate size, position, and both axes of padding simultaneously.
     // runReturnAnimation() may kill & restart these tweens with corrected coordinates.
+    if (state.labelFontSize && labelTargets.length) {
+      labelTargets.forEach((el) => {
+        if (state.labelLetterSpacing)
+          el.style.letterSpacing = state.labelLetterSpacing;
+        if (state.labelTextTransform)
+          el.style.textTransform = state.labelTextTransform;
+      });
+      gsap.killTweensOf(labelTargets);
+      gsap.to(labelTargets, {
+        fontSize: state.labelFontSize,
+        duration: 0.75,
+        ease: "expo.inOut",
+        overwrite: "auto",
+      });
+    }
     gsap.to(rowWrapper, {
       paddingLeft: cardPadLeft,
       paddingRight: cardPadLeft,
@@ -176,6 +211,10 @@
     clone.remove();
     window.__returnClone = null;
     window.__returnRowWrapper = null;
+    window.__returnLabelEls = null;
+    window.__returnLabelFontSize = null;
+    window.__returnLabelLetterSpacing = null;
+    window.__returnLabelTextTransform = null;
   }
 
   onMount(async () => {
@@ -302,22 +341,22 @@
   >
     <div
       class="hero-row"
-      style="width:100%;padding:0 clamp(24px,6vw,96px);box-sizing:border-box;"
+      style="width:100%;padding:0 var(--work-row-pad-h);box-sizing:border-box;"
     >
-      <div style="display:flex;align-items:center;gap:20px;">
+      <div style="display:flex;align-items:center;gap:var(--work-row-gap);">
         <span
           class="label"
           style="width:32px;flex-shrink:0;color:rgba(255,255,255,.45);">04</span
         >
         <div
-          style="width:96px;height:64px;border-radius:6px;overflow:hidden;flex-shrink:0;
+          style="width:var(--work-thumb-w);height:var(--work-thumb-h);border-radius:6px;overflow:hidden;flex-shrink:0;
                     background:{HERO_BG};display:flex;align-items:center;justify-content:center;"
         >
           <span style="font-size:1.4rem;opacity:.8;color:#c084fc;">◆</span>
         </div>
         <div style="flex:1;">
           <h1
-            style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,3vw,2.4rem);
+            style="font-family:'Playfair Display',serif;font-size:var(--work-title-size);
                      font-weight:600;color:rgba(255,255,255,.92);margin-bottom:4px;"
           >
             {project.title}
@@ -326,7 +365,7 @@
             {project.category} — {project.year}
           </p>
         </div>
-        <span style="color:{ACCENT_CLR};font-size:1.4rem;flex-shrink:0;">→</span
+        <span style="color:{ACCENT_CLR};font-size:var(--work-arrow-size);flex-shrink:0;">→</span
         >
       </div>
     </div>
