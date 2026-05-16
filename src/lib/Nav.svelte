@@ -1,6 +1,8 @@
 <script>
   import { currentSection, theme } from "$lib/stores.js";
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
 
   export let sections = [];
   export let onNavigate = () => {};
@@ -10,7 +12,7 @@
 
   let mobileOpen = false;
   let gsap;
-  let sideNavEl, backBtnEl, navLinksEl, topNavEl;
+  let sideNavEl, backBtnEl;
 
   // Promise that resolves once GSAP is loaded and initial state is set
   let _gsapReady;
@@ -56,6 +58,58 @@
   function goSection(i) {
     mobileOpen = false;
     onNavigate(i);
+  }
+
+  /**
+   * Context-aware PORTFOLIO logo click handler.
+   *
+   * Three scenarios:
+   *  1. Homepage  → smooth scroll to #home (section 0) without reloading.
+   *  2. /work/…   → await the reverse FLIP animation (card shrink), then scroll to #home.
+   *  3. /about, /contact, other → trigger their exit animation first, then route home + scroll.
+   */
+  async function handleLogoClick(e) {
+    e.preventDefault();
+    mobileOpen = false;
+
+    const pathname = $page.url.pathname;
+
+    // ── Scenario 1: Already on the homepage ──
+    if (pathname === "/") {
+      onNavigate(0); // goToSection(0) — smooth scroll via fullpage
+      return;
+    }
+
+    // ── Scenario 2: Work detail page (/work/…) ──
+    if (pathname.startsWith("/work/")) {
+      // Delegate to the page's own goBack, which runs the reverse FLIP then calls goto("/").
+      // After SvelteKit navigation, the homepage onMount reads flipState and performs
+      // runReturnAnimation, then we need to scroll to #home.
+      // We piggyback by setting a sessionStorage flag that the homepage checks post-mount.
+      try {
+        sessionStorage.setItem("scrollToHome", "1");
+      } catch (_) {}
+      // onBack is the page's goBack() — it awaits the full FLIP animation before routing.
+      if (typeof onBack === "function") {
+        await onBack();
+      } else {
+        goto("/");
+      }
+      return;
+    }
+
+    // ── Scenario 3: /about, /contact, or any other sub-page ──
+    // Run exit animation first (same as pressing the back button), then route home + scroll.
+    if (typeof onBack === "function") {
+      // Override returnSection so the homepage lands on #home (section 0) instead of the
+      // section the user originally came from.
+      try {
+        sessionStorage.setItem("scrollToHome", "1");
+      } catch (_) {}
+      await onBack();
+    } else {
+      goto("/");
+    }
   }
 
   export async function hideSidebar() {
@@ -156,17 +210,17 @@
 </script>
 
 <!-- TOP NAV -->
-<nav id="top-nav" bind:this={topNavEl}>
+<nav id="top-nav">
   <div style="display:flex;flex-direction:column;gap:2px;">
-    <a
-      href="/"
+    <button
+      on:click={handleLogoClick}
       style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;
-             letter-spacing:.12em;color:{subPage
-        ? 'var(--fg)'
-        : 'var(--fg)'};text-decoration:none;line-height:1.2;"
+             letter-spacing:.12em;color:var(--fg);text-decoration:none;line-height:1.2;
+             background:none;border:none;padding:0;cursor:pointer;text-align:left;"
+      aria-label="Go to home"
     >
       PORTFOLIO
-    </a>
+    </button>
 
     {#if onBack}
       <button
@@ -207,14 +261,13 @@
       class="theme-toggle"
       on:click={toggleTheme}
       aria-label="Toggle theme"
-      style=""
     >
       <span class="theme-toggle-knob"></span>
     </button>
 
     <!-- Section links: hidden on sub-pages -->
     {#if !subPage}
-      <div class="desktop-links" bind:this={navLinksEl}>
+      <div class="desktop-links">
         {#each sections as s, i}
           <button
             on:click={() => goSection(i)}
@@ -233,7 +286,6 @@
         class="ham-btn"
         on:click={() => (mobileOpen = !mobileOpen)}
         aria-label="Menu"
-        style=""
       >
         <span
           style="display:block;width:20px;height:1.5px;background:var(--fg);transition:all .3s;

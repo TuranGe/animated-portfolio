@@ -340,14 +340,16 @@
           overwrite: "auto",
         });
       }
-      // Re-fire the shrink animation to the correct live coordinates
+      // Re-fire the shrink animation to the correct live coordinates.
+      // Both tweens run in parallel; we await the clone tween (the longer one)
+      // so that runReturnAnimation() only resolves once the FLIP is fully done.
       gsap.to(existingWrapper, {
         paddingLeft: cardPadLeft,
         paddingRight: cardPadLeft,
         duration: 0.65,
         ease: "expo.inOut",
       });
-      gsap.to(existingClone, {
+      await gsap.to(existingClone, {
         left: liveRect.left,
         top: liveRect.top,
         width: liveRect.width,
@@ -447,6 +449,13 @@
       }
     } catch (e) {}
 
+    // Logo click from any sub-page sets this flag to override the landing section to #home.
+    let scrollToHome = false;
+    try {
+      scrollToHome = !!sessionStorage.getItem("scrollToHome");
+      if (scrollToHome) sessionStorage.removeItem("scrollToHome");
+    } catch (e) {}
+
     // If returnSection is set (coming back from about/contact), clear any stale flipState
     // so the flip animation doesn't override where we want to land.
     if (returnSection >= 0) {
@@ -497,8 +506,26 @@
 
       await runReturnAnimation();
 
+      // Logo was clicked on a work page → scroll to #home after reverse FLIP completes
+      if (scrollToHome) {
+        goToSection(0);
+      }
+
       // After return, optionally re-animate hero if user scrolls back
       // (already hidden, will animate when section 0 is visited)
+    } else if (scrollToHome) {
+      // Logo clicked on /about or /contact — exit animation already finished on that page
+      // before goto("/") was called. Land on the homepage, slide the nav in, then
+      // immediately scroll to #home without waiting through the hero entrance timeline.
+      const topNavEl = document.getElementById("top-nav");
+      if (topNavEl)
+        gsap.fromTo(
+          topNavEl,
+          { opacity: 0, y: -60 },
+          { opacity: 1, y: 0, duration: 0.55, ease: "expo.out" },
+        );
+      // Scroll to #home right away — no entrance animation delay
+      goToSection(0);
     } else {
       // Normal hero entrance
       const tl = gsap.timeline({ delay: 0.1 });
@@ -538,7 +565,6 @@
           "-=0.1",
         );
     }
-
     // When user navigates to section 0 after returning, animate hero in
     const unsubSection = currentSection.subscribe((idx) => {
       if (idx === 0 && heroTitle) {

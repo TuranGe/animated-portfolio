@@ -22,7 +22,7 @@
     "gsap": "^3.12.4"
   },
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "type": "module"
 }

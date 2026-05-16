@@ -137,6 +137,42 @@
     // Clone the INNER flex div (not the .hero-row wrapper) so flex layout is preserved:
     // the inner div IS the flex container with gap:20px and flex:1 on title → arrow stays right.
     const sourceRow = heroRowInner || heroRow;
+
+    // Find the flex:1 text container (title + label) in the LIVE sourceRow by index.
+    // We must use the live DOM — getComputedStyle on a detached clone always returns "".
+    // We record both the child index and the rendered pixel width so we can:
+    //   (a) target the exact same child in the clone by position, and
+    //   (b) lock it to a fixed pixel width so the flex algorithm can never shrink it
+    //       during the GSAP tween, preventing any mid-animation text reflow.
+    let textContainerIndex = -1;
+    let textContainerLiveWidth = null;
+    if (sourceRow) {
+      const liveChildren = sourceRow.children;
+      for (let i = 0; i < liveChildren.length; i++) {
+        if (window.getComputedStyle(liveChildren[i]).flexGrow === "1") {
+          textContainerIndex = i;
+          textContainerLiveWidth = liveChildren[i].getBoundingClientRect().width;
+          break;
+        }
+      }
+    }
+
+    // Snapshot computed font-family for every element in the live sourceRow BEFORE cloning.
+    // This lets us bake the fonts as inline styles on the clone, making them immune to
+    // CSS class-matching failures (scoped selectors, specificity changes, etc.).
+    // We also snapshot font-size here since we rely on it for the label tween target.
+    const liveFontMap = new Map();
+    if (sourceRow) {
+      const allLive = sourceRow.querySelectorAll("*");
+      allLive.forEach((el) => {
+        const cs = window.getComputedStyle(el);
+        liveFontMap.set(el, {
+          fontFamily: cs.fontFamily,
+          fontSize: cs.fontSize,
+        });
+      });
+    }
+
     if (sourceRow) {
       const rowCopy = sourceRow.cloneNode(true);
       // Preserve the flex container exactly — only reset GSAP artifacts
@@ -147,12 +183,38 @@
       rowCopy.style.boxSizing = "border-box";
       rowCopy.style.transform = "";
       rowCopy.style.opacity = "1";
-      rowCopy.querySelectorAll("*").forEach((el) => {
-        const c = window.getComputedStyle(el);
-        if (c.color) el.style.color = c.color;
-        el.style.transform = "";
-        el.style.opacity = "1";
+
+      // Apply snapshotted colors AND fonts inline. We iterate in parallel over the live
+      // source children (for font data) and the cloned children (to write inline styles).
+      // querySelectorAll returns elements in DOM order, so indices match exactly.
+      const allLive = sourceRow.querySelectorAll("*");
+      const allClone = rowCopy.querySelectorAll("*");
+      allLive.forEach((liveEl, idx) => {
+        const cloneEl = allClone[idx];
+        if (!cloneEl) return;
+        const c = window.getComputedStyle(liveEl);
+        if (c.color) cloneEl.style.color = c.color;
+        cloneEl.style.transform = "";
+        cloneEl.style.opacity = "1";
+        // Bake font-family and font-size inline so they survive outside the component DOM
+        const fontSnap = liveFontMap.get(liveEl);
+        if (fontSnap) {
+          cloneEl.style.fontFamily = fontSnap.fontFamily;
+          cloneEl.style.fontSize = fontSnap.fontSize;
+        }
       });
+
+      // Lock the text container to its live pixel width using the index recorded above.
+      // This must use the index (not getComputedStyle) because the clone is not yet in
+      // the DOM — getComputedStyle on a detached node returns empty strings.
+      if (textContainerIndex >= 0 && textContainerLiveWidth !== null) {
+        const cloneTextContainer = rowCopy.children[textContainerIndex];
+        if (cloneTextContainer) {
+          cloneTextContainer.style.flex = "none";
+          cloneTextContainer.style.width = `${textContainerLiveWidth}px`;
+          cloneTextContainer.style.minWidth = `${textContainerLiveWidth}px`;
+        }
+      }
       // ── Theme-aware colour fix: override hardcoded whites with live CSS vars ──
       const _cs = getComputedStyle(document.documentElement);
       const _fg = _cs.getPropertyValue("--fg").trim();
